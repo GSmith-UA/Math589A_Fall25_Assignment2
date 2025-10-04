@@ -1,7 +1,6 @@
 import numpy as np
 
-def plu_decomposition_in_place(A):
-
+def paqlu_decomposition_in_place(A,TOL):
     m = A.shape[0] # Grab the number of rows...
     n = A.shape[1] # Grabs the number of columns
 
@@ -35,7 +34,7 @@ def plu_decomposition_in_place(A):
             L[[pivot_row,k],0:k] = L[[k,pivot_row],0:k]
 
         # If the diagonal element is now close to zero... call us rank deficient and exit
-        if np.abs(U[k,k]) < 1e-12:
+        if np.abs(U[k,k]) < TOL:
             rank = k
             break
 

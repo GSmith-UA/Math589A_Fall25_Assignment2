@@ -1,6 +1,6 @@
 import numpy as np
 
-def paqlu_decomposition_in_place(A):
+def paqlu_decomposition_in_place(A,TOL):
     m = A.shape[0] # Grab the number of rows...
     n = A.shape[1] # Grabs the number of columns
 
@@ -34,7 +34,7 @@ def paqlu_decomposition_in_place(A):
             L[[pivot_row,k],0:k] = L[[k,pivot_row],0:k]
 
         # If the diagonal element is now close to zero... call us rank deficient and exit
-        if np.abs(U[k,k]) < 1e-12:
+        if np.abs(U[k,k]) < TOL:
             rank = k
             break
 
@@ -53,7 +53,7 @@ def paqlu_decomposition_in_place(A):
     return P, L, U, Q
 
 
-def solve(A, b):
+def solve(A, b, TOL):
     m,n = np.shape(A)
     # Edge cases
     if np.shape(b)[0] != np.shape(A)[0]:
@@ -80,7 +80,7 @@ def solve(A, b):
         b_perm = P@b[:,i]
 
         y = forwardSubstitution(L,b_perm[:r])
-        if np.any(np.abs(b_perm[r:]) > 1e12):
+        if np.any(np.abs(b_perm[r:]) > TOL):
             raise ValueError("inconsistent system: A x = b has no solution")
         c1= backSubstitution(U,y)
 
@@ -90,31 +90,31 @@ def solve(A, b):
     if c:
         c = np.hstack(c)
 
-    return Q@c,N
+    return Q@c,Q@N
 
-def backSubstitution(U,y):
+def backSubstitution(U,y,TOL):
     # U should be Upper Triangular
     rank,colNum = np.shape(U)
     x = np.zeros((colNum,1),dtype = float) # Pre-allocate solution vector
 
     for i in range(rank - 1,-1,-1):
-        if np.abs(U[i,i])<1e-12:
+        if np.abs(U[i,i])<TOL:
             raise ValueError("Singular Matrix in back sub")
         x[i] = (y[i] - (np.dot(x[i+1:].flatten(),U[i,i+1:])))/U[i,i]
     return x
 
-def forwardSubstitution(L,b):
+def forwardSubstitution(L,b,TOL):
     # L should be Lower Triangular
     rank = np.shape(L)[1]
     x = np.zeros((rank,1),dtype = float) # Pre-allocate solution vector
 
     for i in range(0, rank):
-      if np.abs(L[i,i])<1e-12:
+      if np.abs(L[i,i])<TOL:
         raise ValueError("Singular Matrix in forward sub")
       x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
 
-def constructNullSpace_FromLU(U,Q):
+def constructNullSpace_FromLU(U,TOL):
     #We need to construct general solution to Ux = 0
     N = []
     r,n = np.shape(U)
@@ -124,7 +124,7 @@ def constructNullSpace_FromLU(U,Q):
         x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
 
         for k in range(r-1,-1,-1):
-            if np.abs(U[k,k]) < 1e-12:
+            if np.abs(U[k,k]) < TOL:
                 raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
             x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
         N.append(x_null)
@@ -135,5 +135,5 @@ def constructNullSpace_FromLU(U,Q):
     else:
         N = np.zeros((n,0))
     
-    return Q@N
+    return N
 
