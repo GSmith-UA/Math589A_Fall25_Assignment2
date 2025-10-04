@@ -1,6 +1,6 @@
 import numpy as np
 
-def paqlu_decomposition_in_place(A,TOL):
+def paqlu_decomposition_in_place(A,TOL=1e-12):
     m = A.shape[0] # Grab the number of rows...
     n = A.shape[1] # Grabs the number of columns
 
@@ -53,7 +53,7 @@ def paqlu_decomposition_in_place(A,TOL):
     return P, L, U, Q
 
 
-def solve(A, b, TOL):
+def solve(A, b, TOL=1e-12):
     m,n = np.shape(A)
     # Edge cases
     if np.shape(b)[0] != np.shape(A)[0]:
@@ -92,7 +92,7 @@ def solve(A, b, TOL):
 
     return Q@c,Q@N
 
-def backSubstitution(U,y,TOL):
+def backSubstitution(U,y,TOL=1e-12):
     # U should be Upper Triangular
     rank,colNum = np.shape(U)
     x = np.zeros((colNum,1),dtype = float) # Pre-allocate solution vector
@@ -103,7 +103,7 @@ def backSubstitution(U,y,TOL):
         x[i] = (y[i] - (np.dot(x[i+1:].flatten(),U[i,i+1:])))/U[i,i]
     return x
 
-def forwardSubstitution(L,b,TOL):
+def forwardSubstitution(L,b,TOL=1e-12):
     # L should be Lower Triangular
     rank = np.shape(L)[1]
     x = np.zeros((rank,1),dtype = float) # Pre-allocate solution vector
@@ -114,7 +114,7 @@ def forwardSubstitution(L,b,TOL):
       x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
 
-def constructNullSpace_FromLU(U,TOL):
+def constructNullSpace_FromLU(U,TOL=1e-12):
     #We need to construct general solution to Ux = 0
     N = []
     r,n = np.shape(U)

@@ -1,6 +1,6 @@
 import numpy as np
 
-def paqlu_decomposition_in_place(A,TOL):
+def paqlu_decomposition_in_place(A,TOL=1e-12):
     m = A.shape[0] # Grab the number of rows...
     n = A.shape[1] # Grabs the number of columns
 
