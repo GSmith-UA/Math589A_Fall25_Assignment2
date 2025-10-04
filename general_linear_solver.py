@@ -55,39 +55,59 @@ def paqlu_decomposition_in_place(A):
 
 def solve(A, b):
     P,L,U,Q = paqlu_decomposition_in_place(A)
+    m,n = np.shape(A)
+    # The rank can be pulled from either the total columns of L or the total rows of U
+    r = np.shape(U)[0]
+
 
     # Probably need to permute b so I'm going to hit it with P
     b_perm = P@b
 
-    y = forwardSubsitituion(L,b_perm)
-    x = backSubstitution(U,y)
+    y = forwardSubstitution(L,b_perm[:r])
+    if np.any(np.abs(b_perm[r:])) > 1e12:
+        raise ValueError("System is inconsistent")
+    x_part = backSubstitution(U,y)
 
-    x = Q@x # Re order the columns
-    return x
+    x_part = Q@x_part # Re order the columns
+
+    #We need to construct general solution to Ux = 0
+    N = []
+    # The remaining columns in U are the free variables
+    for i in range(r,n):
+        x_null = np.zeros((n,1))
+        x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
+
+        for k in range(r-1,-1,-1):
+            x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
+        N.append(Q@x_null)
+        
+    # if N is non-empty stack into a matrix
+    if N:
+        N = np.hstack(N)
+    else:
+        N = np.zeros((n,0))
+
+    return x_part,N
 
 def backSubstitution(U,y):
     # U should be Upper Triangular
-    colNum = np.shape(U)[1]
-    rowNum = np.shape(U)[0]
+    rank,colNum = np.shape(U)
     x = np.zeros((colNum,1),dtype = float) # Pre-allocate solution vector
 
-    for i in range(rowNum - 1,-1,-1):
+    for i in range(rank - 1,-1,-1):
         if np.abs(U[i,i])<1e-12:
-            print("Something bad has happened? Or handle Null space?")
-            return None
-        x[i] = (y[i] - (np.dot(x[i+1:],U[i,i+1:])))/U[i,i]
+            raise ValueError("Singular Matrix in back sub")
+        x[i] = (y[i] - (np.dot(x[i+1:].flatten(),U[i,i+1:])))/U[i,i]
     return x
 
-def forwardSubsitituion(L,b):
+def forwardSubstitution(L,b):
     # L should be Lower Triangular
-    colNum = np.shape(L)[1]
-    rowNum = np.shape(L)[0]
-    x = np.zeros((colNum,1),dtype = float) # Pre-allocate solution vector
+    rank = np.shape(L)[1]
+    x = np.zeros((rank,1),dtype = float) # Pre-allocate solution vector
 
-    for i in range(0, rowNum):
+    for i in range(0, rank):
       if np.abs(L[i,i])<1e-12:
-        print("Something bad has happened? Or handle Null space?")
-        return None
-      x[i] = (b[i] - (np.dot(x[:i],L[i,:i])))/L[i,i]
+        raise ValueError("Singular Matrix in forward sub")
+      x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
 
