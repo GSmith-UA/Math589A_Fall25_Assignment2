@@ -54,40 +54,43 @@ def paqlu_decomposition_in_place(A):
 
 
 def solve(A, b):
-    P,L,U,Q = paqlu_decomposition_in_place(A)
     m,n = np.shape(A)
+    # Edge cases
+    if np.shape(b)[0] != np.shape(A)[0]:
+        raise ValueError("b must have the same number of rows as A")
+    
+    if (m == 0):
+        c = np.zeros((n,1),dtype=float)
+        N = np.eye(n)
+        return c,N
+    if (n ==0):
+        raise ValueError("There are no columns in the matrix A")
+
+    P,L,U,Q = paqlu_decomposition_in_place(A)
     # The rank can be pulled from either the total columns of L or the total rows of U
     r = np.shape(U)[0]
 
+    N = constructNullSpace_FromLU(U,Q)
 
-    # Probably need to permute b so I'm going to hit it with P
-    b_perm = P@b
+    b_num = np.shape(b)[1]
+    c = []
 
-    y = forwardSubstitution(L,b_perm[:r])
-    if np.any(np.abs(b_perm[r:])) > 1e12:
-        raise ValueError("System is inconsistent")
-    x_part = backSubstitution(U,y)
+    for i in range(0,b_num):
+        # Probably need to permute b so I'm going to hit it with P
+        b_perm = P@b[:,i]
 
-    x_part = Q@x_part # Re order the columns
+        y = forwardSubstitution(L,b_perm[:r])
+        if np.any(np.abs(b_perm[r:]) > 1e12):
+            raise ValueError("inconsistent system: A x = b has no solution")
+        c1= backSubstitution(U,y)
 
-    #We need to construct general solution to Ux = 0
-    N = []
-    # The remaining columns in U are the free variables
-    for i in range(r,n):
-        x_null = np.zeros((n,1))
-        x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
+        c1= c1# Re order the columns
+        c.append(c1)
 
-        for k in range(r-1,-1,-1):
-            x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
-        N.append(Q@x_null)
-        
-    # if N is non-empty stack into a matrix
-    if N:
-        N = np.hstack(N)
-    else:
-        N = np.zeros((n,0))
+    if c:
+        c = np.hstack(c)
 
-    return x_part,N
+    return Q@c,N
 
 def backSubstitution(U,y):
     # U should be Upper Triangular
@@ -110,4 +113,27 @@ def forwardSubstitution(L,b):
         raise ValueError("Singular Matrix in forward sub")
       x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
+
+def constructNullSpace_FromLU(U,Q):
+    #We need to construct general solution to Ux = 0
+    N = []
+    r,n = np.shape(U)
+    # The remaining columns in U are the free variables
+    for i in range(r,n):
+        x_null = np.zeros((n,1))
+        x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
+
+        for k in range(r-1,-1,-1):
+            if np.abs(U[k,k]) < 1e-12:
+                raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
+            x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
+        N.append(x_null)
+        
+    # if N is non-empty stack into a matrix
+    if N:
+        N = np.hstack(N)
+    else:
+        N = np.zeros((n,0))
+    
+    return Q@N
 
