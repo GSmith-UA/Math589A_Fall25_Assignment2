@@ -119,7 +119,7 @@ def forwardSubstitution(L,b,TOL=1e-12):
       x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
 
-def constructNullSpace_FromLU(U,TOL=1e-12):
+def constructNullSpace_FromLU(U,TOL=1e-15):
     #We need to construct general solution to Ux = 0
     N = []
     r,n = np.shape(U)
