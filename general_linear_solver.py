@@ -82,6 +82,9 @@ def solve(A, b, TOL=1e-15):
         y = forwardSubstitution(L,b_perm[:r])
         if r < m:
             if np.any(np.abs(b_perm[r:]) > TOL):
+                print(A)
+                print(b)
+                print(r)
                 # print(b_perm[r:])
                 # print("Griffin's print bc I cannot see unit tests...")
                 raise ValueError("inconsistent system: A x = b has no solution")
