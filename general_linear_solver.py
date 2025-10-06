@@ -98,7 +98,7 @@ def backSubstitution(U,y,TOL=1e-12):
     x = np.zeros((colNum,1),dtype = float) # Pre-allocate solution vector
 
     for i in range(rank - 1,-1,-1):
-        if np.abs(U[i,i])<TOL:
+        if np.any(np.abs(U[i,i])<TOL):
             raise ValueError("Singular Matrix in back sub")
         x[i] = (y[i] - (np.dot(x[i+1:].flatten(),U[i,i+1:])))/U[i,i]
     return x
@@ -109,7 +109,7 @@ def forwardSubstitution(L,b,TOL=1e-12):
     x = np.zeros((rank,1),dtype = float) # Pre-allocate solution vector
 
     for i in range(0, rank):
-      if np.abs(L[i,i])<TOL:
+      if np.any(np.abs(L[i,i])<TOL):
         raise ValueError("Singular Matrix in forward sub")
       x[i] = (b[i] - (np.dot(x[:i].flatten(),L[i,:i])))/L[i,i]
     return x
@@ -124,7 +124,8 @@ def constructNullSpace_FromLU(U,TOL=1e-12):
         x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
 
         for k in range(r-1,-1,-1):
-            if np.abs(U[k,k]) < TOL:
+            print(U[k,k])
+            if np.any(np.abs(U[k,k]) < TOL):
                 raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
             x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
         N.append(x_null)
