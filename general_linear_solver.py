@@ -130,8 +130,8 @@ def constructNullSpace_FromLU(U,TOL=np.finfo(float).eps):
 
         for k in range(r-1,-1,-1):
             print(U[k,k])
-            if np.any(np.abs(U[k,k]) < TOL):
-                raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
+            # if np.any(np.abs(U[k,k]) < TOL):
+            #     raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
             x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
         N.append(x_null)
         
