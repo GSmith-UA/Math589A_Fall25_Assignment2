@@ -53,7 +53,7 @@ def paqlu_decomposition_in_place(A,TOL=1e-12):
     return P, L, U, Q
 
 
-def solve(A, b, TOL=1e-12):
+def solve(A, b, TOL=1e-15):
     m,n = np.shape(A)
     # Edge cases
     if np.shape(b)[0] != np.shape(A)[0]:
