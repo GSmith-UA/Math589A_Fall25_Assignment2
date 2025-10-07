@@ -90,11 +90,11 @@ def solve(A, b, TOL=1e-6):
                 # print(P.T@L@U@Q.T)
                 # print("Griffin's print bc I cannot see unit tests...")
                 c = None
+                c1 = None
                 #raise ValueError("inconsistent system: A x = b has no solution")
         c1= backSubstitution(U,y)
-
-        c1= c1# Re order the columns
-        c.append(c1)
+        if c1:
+            c.append(c1)
 
     if c:
         c = np.hstack(c)
