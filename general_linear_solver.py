@@ -88,7 +88,8 @@ def solve(A, b, TOL=1e-6):
                 # print(U)
                 # print(L)
                 # print(P.T@L@U@Q.T)
-                # print("Griffin's print bc I cannot see unit tests...")
+                print("Griffin's print bc I cannot see unit tests...")
+                print(Q@N)
                 return None, Q@N
                 #raise ValueError("inconsistent system: A x = b has no solution")
         
