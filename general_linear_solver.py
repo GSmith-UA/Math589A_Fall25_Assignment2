@@ -87,6 +87,7 @@ def solve(A, b, TOL=1e-6):
                 print(b_perm[r:])
                 print(U)
                 print(L)
+                print(P.T@L@U@Q.T)
                 # print("Griffin's print bc I cannot see unit tests...")
                 raise ValueError("inconsistent system: A x = b has no solution")
         c1= backSubstitution(U,y)
