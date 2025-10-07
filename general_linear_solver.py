@@ -89,16 +89,14 @@ def solve(A, b, TOL=1e-6):
                 # print(L)
                 # print(P.T@L@U@Q.T)
                 # print("Griffin's print bc I cannot see unit tests...")
-                c = None
-                c1 = None
+                return None, Q@N
                 #raise ValueError("inconsistent system: A x = b has no solution")
+        
         c1= backSubstitution(U,y)
-        if c1:
-            c.append(c1)
+        c.append(c1)
 
     if c:
         c = np.hstack(c)
-
     return Q@c,Q@N
 
 def backSubstitution(U,y,TOL=1e-6):
