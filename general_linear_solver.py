@@ -81,15 +81,6 @@ def solve(A, b, TOL=1e-6):
         y = forwardSubstitution(L,b_perm[:r])
         if r < m:
             if np.any(np.abs(y[r:]) > TOL):
-                # print(A)
-                # print(b)
-                # print(r)
-                # print(b_perm[r:])
-                # print(U)
-                # print(L)
-                # print(P.T@L@U@Q.T)
-                print("Griffin's print bc I cannot see unit tests...")
-                print(Q@N)
                 return None, Q@N
                 #raise ValueError("inconsistent system: A x = b has no solution")
         
@@ -132,7 +123,6 @@ def constructNullSpace_FromLU(U,TOL=1e-6):
         x_null[i] = 1 # Set variable of interest to 1 and other free var to 0
 
         for k in range(r-1,-1,-1):
-            print(U[k,k])
             # if np.any(np.abs(U[k,k]) < TOL):
             #     raise ZeroDivisionError("Calculating Nullspace: U has a pivot near zero")
             x_null[k] = -np.dot(U[k,k+1:],x_null[k+1:]) / U[k,k]
