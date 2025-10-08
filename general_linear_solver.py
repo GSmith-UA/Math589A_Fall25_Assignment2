@@ -80,7 +80,7 @@ def solve(A, b, TOL=1e-6):
 
         y = forwardSubstitution(L,b_perm[:r])
         if r < m:
-            if np.any(np.abs(b_perm[r:]) > TOL):
+            if np.any(np.abs(y[r:]) > TOL):
                 # print(A)
                 # print(b)
                 # print(r)
