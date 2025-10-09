@@ -1,6 +1,6 @@
 import numpy as np
 
-def paqlu_decomposition_in_place(A,TOL=1e-15):
+def paqlu_decomposition_in_place(A,TOL=1e-6):
     m = A.shape[0] # Grab the number of rows...
     n = A.shape[1] # Grabs the number of columns
 
@@ -18,21 +18,24 @@ def paqlu_decomposition_in_place(A,TOL=1e-15):
 
     for k in range(0,max_rank):
 
-        idx = np.argmax(np.abs(U[k:,k:]))
+        idx = np.argmax(np.abs(U[k:,k:])) # This grabs the linear index in the submatrix. I unravel it below... 
         pivot_row = k + (idx//U[k:,k:].shape[1])
         pivot_col = k + (idx%U[k:,k:].shape[1])
 
-        # If the diagonal element is now close to zero... call us rank deficient and exit
+        # Here we check the magnitude of the pivot before we perform the switches...
         if np.abs(U[pivot_row,pivot_col]) < TOL:
             rank = k
             break
+
         # Swap rows k and r in U
         U[[pivot_row,k],:] = U[[k,pivot_row],:]
         # Swap rows k and r in P
         P[[pivot_row,k],:] = P[[k,pivot_row],:]
 
+        # Swap columns
         U[:,[pivot_col,k]] = U[:,[k,pivot_col]]
         Q[:,[pivot_col,k]] = Q[:,[k,pivot_col]]
+
         # Swap rows k and r in L (but only columns 1:k-1) or in python 0:k-1
         if k-1>=0:
             L[[pivot_row,k],0:k] = L[[k,pivot_row],0:k]
@@ -41,14 +44,16 @@ def paqlu_decomposition_in_place(A,TOL=1e-15):
             L[i,k] = U[i,k]/U[k,k]
             U[i,k:] = U[i,k:] - L[i,k]*U[k,k:]
             
-
+    # Might be faster if we just grabbed the slice and set to a one vector?
+    # Can experiment with this later
     for i in range(0,rank):
         L[i,i] = 1
 
+    # Here we clip L and U so that the dimensions are limited by the rank
     L = L[:,:rank]
     U = U[:rank,:]
-    # Note: P must be a vector, not array
-    # return P, Q, A
+
+    # At somepoint run some testing with a matrix P,Q vs a vector P,Q
     return P, L, U, Q
 
 

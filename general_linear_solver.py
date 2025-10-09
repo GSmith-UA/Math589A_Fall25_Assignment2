@@ -18,21 +18,24 @@ def paqlu_decomposition_in_place(A,TOL=1e-6):
 
     for k in range(0,max_rank):
 
-        idx = np.argmax(np.abs(U[k:,k:]))
+        idx = np.argmax(np.abs(U[k:,k:])) # This grabs the linear index in the submatrix. I unravel it below... 
         pivot_row = k + (idx//U[k:,k:].shape[1])
         pivot_col = k + (idx%U[k:,k:].shape[1])
 
-        # If the diagonal element is now close to zero... call us rank deficient and exit
+        # Here we check the magnitude of the pivot before we perform the switches...
         if np.abs(U[pivot_row,pivot_col]) < TOL:
             rank = k
             break
+
         # Swap rows k and r in U
         U[[pivot_row,k],:] = U[[k,pivot_row],:]
         # Swap rows k and r in P
         P[[pivot_row,k],:] = P[[k,pivot_row],:]
 
+        # Swap columns
         U[:,[pivot_col,k]] = U[:,[k,pivot_col]]
         Q[:,[pivot_col,k]] = Q[:,[k,pivot_col]]
+
         # Swap rows k and r in L (but only columns 1:k-1) or in python 0:k-1
         if k-1>=0:
             L[[pivot_row,k],0:k] = L[[k,pivot_row],0:k]
@@ -41,19 +44,25 @@ def paqlu_decomposition_in_place(A,TOL=1e-6):
             L[i,k] = U[i,k]/U[k,k]
             U[i,k:] = U[i,k:] - L[i,k]*U[k,k:]
             
-
+    # Might be faster if we just grabbed the slice and set to a one vector?
+    # Can experiment with this later
     for i in range(0,rank):
         L[i,i] = 1
 
+    # Here we clip L and U so that the dimensions are limited by the rank
     L = L[:,:rank]
     U = U[:rank,:]
-    # Note: P must be a vector, not array
-    # return P, Q, A
+
+    # At somepoint run some testing with a matrix P,Q vs a vector P,Q
     return P, L, U, Q
 
 
 def solve(A, b, TOL=1e-6):
+    # Solves a problem Ax = b
+    # Returns a Null space if some variables are free along with a particular solution
+
     m,n = np.shape(A)
+
     # Edge cases
     if np.shape(b)[0] != np.shape(A)[0]:
         raise ValueError("b must have the same number of rows as A")
@@ -65,23 +74,33 @@ def solve(A, b, TOL=1e-6):
     if (n ==0):
         raise ValueError("There are no columns in the matrix A")
 
+    # Perform the PAQ = LU decomp
     P,L,U,Q = paqlu_decomposition_in_place(A)
+
     # The rank can be pulled from either the total columns of L or the total rows of U
     r = np.shape(U)[0]
 
-    N = constructNullSpace_FromLU(U,Q)
+    # Construct the Null space (even if we pass multiple b vectors we only need to do this once)
+    N = constructNullSpace_FromLU(U)
 
+    # This is just in case we pass multiple b vectors (Marek doesn't do this...)
     b_num = np.shape(b)[1]
+
+    # Initialize an empty array for the particular solutions
     c = []
 
     for i in range(0,b_num):
+        # Performs Ax = b solve on all the b vectors given....
+
         # Probably need to permute b so I'm going to hit it with P
         b_perm = P@b[:,i]
 
         y = forwardSubstitution(L,b_perm[:r])
+
+        # Check for inconsistency: all values in the y vector should be zero underneath the rank!
         if r < m:
             if np.any(np.abs(y[r:]) > TOL):
-                return None, Q@N
+                return None, Q@N # Change this back to Value Error when you are done passing Marek's unit tests
                 #raise ValueError("inconsistent system: A x = b has no solution")
         
         c1= backSubstitution(U,y)
@@ -89,6 +108,8 @@ def solve(A, b, TOL=1e-6):
 
     if c:
         c = np.hstack(c)
+
+    # I apply Q right before I return... got to save on the matrix mults... only do them when we have to   
     return Q@c,Q@N
 
 def backSubstitution(U,y,TOL=1e-6):
